@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+const { ObjectId } = require('mongodb');
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { createCharacter } from '../api/Api';
@@ -75,8 +76,11 @@ const CreateCharacterScreen = ({ navigation }) => {
       alert("Please fill in all character details.");
       return;
     }
+
+    const customId = new ObjectId();
   
     const newCharacter = {
+        _id: customId,
         name: name,
         age: age,
         race: race,
@@ -84,17 +88,14 @@ const CreateCharacterScreen = ({ navigation }) => {
         gender: gender,
       };
   
-    try {
-        const response = await createCharacter(newCharacter);
-        console.log('Response from createCharacter:', response);
-        //   navigation.navigate('QuestForge', { newGame: true, character: newCharacter });
+      try {
         const characterId = await createCharacter(newCharacter);
-        navigation.navigate('QuestForge', { characterId: characterId });        
-    } catch (error) {
-      console.error('Error creating character:', error);
-      alert('Failed to create character');
-    }
-  };
+        navigation.navigate('QuestForge', { characterId: characterId });
+      } catch (error) {
+        console.error('Error creating character:', error);
+        alert('Failed to create character');
+      }
+    };
 
   return (
     <ImageBackground 

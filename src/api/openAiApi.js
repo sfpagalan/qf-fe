@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const OPENAI_URL = 'https://api.openai.com/v1/engines/text-davinci-003/completions';
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+// const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_API_KEY = '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';
 
 const generateRequestBody = (userChoice) => {
   let requestBody = {
@@ -26,7 +27,7 @@ const openAiApi = {
     generateStorySegment: async (user, userChoice, scene, roll, setLoading) => {
       const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
       };
   
       if (!user || !user.name || !user.age || !user.race || !user.characterClass || !user.gender) {

@@ -3,6 +3,9 @@ import { Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import openAiApi from '../api/openAiApi';
 import axios from 'axios';
 
+// const API_URL = 'https://questforgebackend-itdm.onrender.com';
+const API_URL = 'http://localhost:3002';
+
 const QuestForgeScreen = ({ route, navigation }) => {
     const { characterId } = route.params;
     const [character, setCharacter] = useState(null);
@@ -19,8 +22,9 @@ const QuestForgeScreen = ({ route, navigation }) => {
                 return;
               }
           try {
-            const response = await axios.get(`http://localhost:3002/api/characters/${characterId}`);
+            const response = await axios.get(`${API_URL}/characters/${characterId}`);
             setCharacter(response.data);
+
             // After successfully fetching the character, generate the initial story
             await generateInitialStory(response.data);
           } catch (err) {
@@ -80,10 +84,15 @@ const QuestForgeScreen = ({ route, navigation }) => {
   if (loading) {
     return <Text>Loading...</Text>;
   }
-
+  
+  if (error && error.response && error.response.status === 404) {
+    return <Text>Character not found.</Text>;
+  }
+  
   if (error) {
     return <Text>Error: {error.message}</Text>;
   }
+  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
