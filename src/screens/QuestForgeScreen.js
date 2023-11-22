@@ -22,7 +22,7 @@ const QuestForgeScreen = ({ route, navigation }) => {
                 return;
               }
           try {
-            const response = await axios.get(`${API_URL}/characters/${characterId}`);
+            const response = await axios.get(`${API_URL}/:characterId`);
             setCharacter(response.data);
 
             // After successfully fetching the character, generate the initial story
