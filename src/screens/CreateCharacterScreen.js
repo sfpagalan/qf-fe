@@ -85,8 +85,11 @@ const CreateCharacterScreen = ({ navigation }) => {
       };
   
     try {
-      await createCharacter(newCharacter);
-      navigation.navigate('QuestForge', { newGame: true, character: newCharacter });
+        const response = await createCharacter(newCharacter);
+        console.log('Response from createCharacter:', response);
+        //   navigation.navigate('QuestForge', { newGame: true, character: newCharacter });
+        const characterId = await createCharacter(newCharacter);
+        navigation.navigate('QuestForge', { characterId: characterId });        
     } catch (error) {
       console.error('Error creating character:', error);
       alert('Failed to create character');

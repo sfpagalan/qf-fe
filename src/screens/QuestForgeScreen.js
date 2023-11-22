@@ -1,98 +1,104 @@
 import React, { useEffect, useState } from 'react';
-import { continueStory, fetchInitialStory } from '../api/Api';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import axios from 'axios'; // Assuming axios is used for API calls
+import { Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import openAiApi from '../api/openAiApi';
+import axios from 'axios';
 
 const QuestForgeScreen = ({ route, navigation }) => {
-    const { storyCharacter, storyId } = route.params;
+    const { characterId } = route.params;
     const [character, setCharacter] = useState(null);
-    const [story, setStory] = useState('');
+    const [scene, setScene] = useState('');
     const [options, setOptions] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null); 
+    const [error, setError] = useState(null);
 
-    const fetchCharacter = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const characterId = '655dba84803455322745f7af';
+    useEffect(() => {
+        console.log('Character ID:', characterId);
+        const fetchCharacter = async () => {
+            if (!characterId) {
+                console.error('Character ID is undefined');
+                return;
+              }
+          try {
             const response = await axios.get(`http://localhost:3002/api/characters/${characterId}`);
             setCharacter(response.data);
-        } catch (error) {
-            console.error('Error fetching character:', error);
-            setError(error);
-        } finally {
+            // After successfully fetching the character, generate the initial story
+            await generateInitialStory(response.data);
+          } catch (err) {
+            console.error('Error fetching character:', err);
+            setError(err);
+          } finally {
             setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchCharacter();
-    }, []);
-
-    if (loading) {
-        return <Text>Loading...</Text>;
-    }
-
-    if (error) {
-        return <Text>Error loading character</Text>;
-    }
-
-    // Fetch initial story and options
-    useEffect(() => {
-        fetchInitialStory(storyId, storyCharacter)
-            .then(({ initialStory, initialOptions }) => {
-                setStory(initialStory);
-                setOptions(initialOptions);
-            })
-            .catch(error => {
-                console.error('Error fetching initial story:', error);
-                setStory('An unexpected error occurred in your adventure...');
-            });
-    }, [storyId, storyCharacter]);
-
-    // const fetchInitialStory = async (characterData, storyId) => {
-    //     try {
-    //         // Replace this URL with your API endpoint
-    //         const response = await axios.post(`http://localhost:19007/api/stories/${storyId}`, { character: characterData });
-    //         setStory(response.data.story);
-    //         setOptions(response.data.options);
-    //     } catch (error) {
-    //         console.error('Error fetching story:', error);
-    //         setStory('An unexpected error occurred in your adventure...');
-    //     }
-    // };
-
-    const handleOptionSelect = async (selectedOption) => {
-        try {
-            // Make a POST request to continue the story
-            const { updatedStory, newOptions } = await continueStory(storyId, character, selectedOption);
-
-            // Update state with the new story segment and options
-            setStory(prevStory => prevStory + '\n\n' + updatedStory);
-            setOptions(newOptions);
-        } catch (error) {
-            console.error('Error processing option:', error);
-            // Handle the error (e.g., show an alert or a message to the user)
-        }
-    };
+          }
+        };
     
-    return (
-        <View contentContainerStyle={styles.container}>
-            <Text style={styles.header}>Character Name: {character.name}</Text>
-            <Text style={styles.paragraph}>Character ID: {character._id}</Text>
-            <Text style={styles.storyText}>{story}</Text>
-            {options.map((option, index) => (
-                <TouchableOpacity 
-                    key={index} 
-                    style={styles.optionButton} 
-                    onPress={() => handleOptionSelect(option)}
-                >
-                    <Text style={styles.optionText}>{option}</Text>
-                </TouchableOpacity>
-            ))}
-        </View>
-    );
+        fetchCharacter();
+      }, [characterId]);
+
+    const generateInitialStory = async (character) => {
+        if (!character || !character.name) {
+            console.error('Character data is not available');
+            return;
+        }
+    };
+
+    useEffect(() => {
+        if (character) {
+            const initialScene = '';
+            const initialChoice = '';
+            generateStorySegment(character, initialChoice, initialScene);
+        }
+    }, [character]);
+  
+  const generateStorySegment = async (user, userChoice, currentScene) => {
+    if (!user || !user.name || !user.age || !user.race || !user.characterClass, !user.gender) {
+        throw new Error('Incomplete character data');
+    }
+    setLoading(true);
+    try {
+      const storySegment = await openAiApi.generateStorySegment(user, userChoice, currentScene);
+      setScene(storySegment.scene);
+      setOptions(storySegment.options);
+    } catch (error) {
+      console.error('Error generating story segment:', error);
+      setError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOptionSelect = async (option) => {
+    try {
+      const storySegment = await openAiApi.generateStorySegment(character, option, scene, roll, setLoading);
+      setScene(storySegment.scene);
+      setOptions(storySegment.options);
+    } catch (error) {
+      console.error('Error generating story segment:', error);
+      setError(error);
+    }
+  };
+
+  if (loading) {
+    return <Text>Loading...</Text>;
+  }
+
+  if (error) {
+    return <Text>Error: {error.message}</Text>;
+  }
+
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.storyText}>{scene}</Text>
+      {options.map((option, index) => (
+        <TouchableOpacity
+          key={index}
+          style={styles.optionButton}
+          onPress={() => handleOptionSelect(option)}
+        >
+          <Text style={styles.optionText}>{option}</Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -124,5 +130,7 @@ const styles = StyleSheet.create({
     paragraph: {
         fontSize: 16,
     },});
+
+
 
 export default QuestForgeScreen;
