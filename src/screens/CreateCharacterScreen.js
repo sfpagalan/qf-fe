@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { createCharacter } from '../api/Api';
 import bgImg from '../../assets/bgImg.jpeg';
+
+const testData = {
+    name: 'TestName',
+    age: '25',
+    gender: 'Male',
+    race: 'Human',
+    characterClass: 'Barbarian'
+  };
 
 const CreateCharacterScreen = ({ navigation }) => {
   const [name, setName] = useState('');
@@ -10,6 +18,20 @@ const CreateCharacterScreen = ({ navigation }) => {
   const [gender, setGender] = useState('Male');
   const [race, setRace] = useState('Human');
   const [characterClass, setCharacterClass] = useState('Barbarian');
+
+    // Add the debugMode state
+    const [debugMode, setDebugMode] = useState(false);
+
+    // The useEffect hook for auto-filling the form
+    useEffect(() => {
+      if (debugMode) {
+        setName(testData.name);
+        setAge(testData.age);
+        setGender(testData.gender);
+        setRace(testData.race);
+        setCharacterClass(testData.characterClass);
+      }
+    }, [debugMode]);
 
   const ageLimits = {
     Human: 100,
@@ -75,7 +97,14 @@ const CreateCharacterScreen = ({ navigation }) => {
     <ImageBackground 
       source={bgImg}
       style={styles.background}
-    >      
+    > 
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => setDebugMode(!debugMode)}
+      >
+        <Text style={styles.buttonText}>Toggle Debug Mode</Text>
+      </TouchableOpacity>
+
       <TextInput
         style={styles.input}
         placeholder="Type your character name"
